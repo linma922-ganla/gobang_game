@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
 
 from .board import Board, EMPTY, Point
 
@@ -68,6 +68,39 @@ def get_winner(board: Board, last_move: Optional[Point], win_length: int = 5) ->
             return board.get(r, c)
         return EMPTY
     return check_win(board, win_length)
+
+
+def get_win_line(board: Board, last_move: Optional[Point],
+                 win_length: int = 5) -> List[Point]:
+    """返回获胜连线的坐标列表（用于界面高亮）。
+
+    若 last_move 提供，只检查经过该点的四条线；返回第一个构成 win_length
+    连线的连续坐标序列。无获胜时返回空列表。
+    """
+    if last_move is None:
+        return []
+    row, col = last_move
+    player = board.get(row, col)
+    if player == EMPTY:
+        return []
+
+    for dr, dc in _DIRECTIONS:
+        line = [(row, col)]
+        # 正方向
+        r, c = row + dr, col + dc
+        while board.in_bounds(r, c) and board.get(r, c) == player:
+            line.append((r, c))
+            r += dr
+            c += dc
+        # 反方向
+        r, c = row - dr, col - dc
+        while board.in_bounds(r, c) and board.get(r, c) == player:
+            line.insert(0, (r, c))
+            r -= dr
+            c -= dc
+        if len(line) >= win_length:
+            return line
+    return []
 
 
 class Rules:

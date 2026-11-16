@@ -93,15 +93,52 @@ python -m pytest
 C:\Users\malin\.conda\envs\pytorch_env\python.exe -m pytest
 ```
 
+## 启动游戏界面
+
+```bash
+# 激活环境后，从 src 目录启动
+cd gomoku_agent/src
+python -m ui.app
+# 或
+python -m src
+```
+
+**操作说明：**
+
+- **人机对战**（默认模式）：人类执黑先行，AI（战术 AI）执白；点击棋盘空位落子。
+- **悔棋**：人机模式下撤销「AI + 人类」一整轮，恢复到人类重新决策前。
+- **交换先手**：点击后人类改执白，AI 执黑（AI 先手）。
+- **重新开始 / 新对局**：清空棋盘重新开始。
+- **已接入 Agent**：随机 Agent、战术 Agent（战术搜索 + 局面评分）。
+- **待接入**：Alpha-Beta 搜索 Agent、神经网络 Agent（Phase 3 / 4 完成后接入，界面已预留统一 Agent 接口与 AI 信息展示位）。
+
+## 自动对局（图形化查看）
+
+用图形化界面实时观看两个 Agent 自动对弈，避免只有终端文字输出的「黑盒子」：
+
+```bash
+cd gomoku_agent/src
+python main.py --gui          # 图形化自动对局（默认随机 vs 随机）
+python main.py --gui --delay 0.2   # 调整每步间隔秒数
+```
+
+对局界面内可交互：**空格** 暂停/继续、**P** 切换自动/手动、**回车/鼠标点击**（暂停时）单步前进、**Esc/Q** 退出。
+
+不带 `--gui` 时仍保持原来的命令行统计模式：
+
+```bash
+python main.py --games 10     # 命令行统计 10 局
+```
+
 ## 开发进度
 
 见 [PROJECT_PLAN.md](PROJECT_PLAN.md)。
 
 - [x] Phase 0：环境检查与项目初始化
-- [ ] Phase 1：游戏环境
-- [ ] Phase 2：基础战术引擎
+- [x] Phase 1：游戏环境
+- [x] Phase 2：基础战术引擎
 - [ ] Phase 3：Alpha-Beta 搜索
 - [ ] Phase 4：神经网络
 - [ ] Phase 5：Self-Play
-- [ ] Phase 6：完整游戏界面
+- [x] Phase 6：完整游戏界面（最小可玩版本）
 - [ ] Phase 7：评测与优化
