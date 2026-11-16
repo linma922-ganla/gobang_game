@@ -1,0 +1,40 @@
+# Gomoku AI Agent 默认配置
+# 训练参数、棋盘规则、搜索参数、网络结构、训练批次等均在此统一管理
+
+board:
+  size: 15              # 棋盘尺寸（15×15）
+  win_length: 5         # 连成几子获胜
+
+rules:
+  use_forbidden_moves: false   # 是否启用禁手规则（预留接口）
+  free_rule: true              # 自由规则
+
+encoding:
+  channels: 3           # 输入通道数：当前方 / 对手 / 最近落子
+
+search:
+  time_limit_ms: 1000   # 搜索时间限制（毫秒）
+  max_depth: 20         # 最大搜索深度
+  use_transposition_table: true
+  use_iterative_deepening: true
+  vcf_enabled: true
+
+network:
+  type: cnn             # 网络类型：cnn / resnet
+  input_channels: 3
+  board_size: 15
+  value_range: [-1.0, 1.0]
+
+training:
+  self_play_games: 1000
+  replay_buffer_size: 100000
+  batch_size: 256
+  learning_rate: 0.001
+  epochs: 10
+  use_data_augmentation: true   # 棋盘旋转、翻转等数据增强
+  checkpoint_dir: "checkpoints"
+  data_dir: "data"
+
+evaluation:
+  games_per_match: 100  # 每次竞技场对局数
+  elo_k: 32             # Elo 计算的 K 因子

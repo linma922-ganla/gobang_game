@@ -1,0 +1,32 @@
+# Gomoku AI Agent 依赖清单
+#
+# 本项目使用 Anaconda 的 pytorch_env 环境（Python 3.12.9）。
+# 该环境已预装 torch(CUDA)、numpy、pygame、matplotlib、yaml 等。
+#
+# 激活环境：
+#   conda activate pytorch_env
+#
+# 或直接使用该环境的 Python 运行：
+#   C:\Users\malin\.conda\envs\pytorch_env\python.exe -m pytest
+#
+# 完整依赖（含版本，供重建环境参考）：
+
+# ---- 核心数值计算 ----
+numpy>=1.26,<2.0
+
+# ---- 测试 ----
+pytest>=8.0
+
+# ---- 可视化（评测曲线）----
+matplotlib>=3.8
+
+# ---- 神经网络（Phase 4 起需要）----
+# 已安装 torch 2.6.0+cu124（CUDA 版，匹配 RTX 4070）
+torch>=2.6
+
+# ---- 游戏界面（Phase 6 起需要）----
+# 已安装 pygame 2.6.1
+pygame>=2.5
+
+# ---- 配置解析 ----
+pyyaml>=6.0
