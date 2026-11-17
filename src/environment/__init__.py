@@ -5,6 +5,7 @@ from .rules import Rules, check_win, check_win_at, get_winner, get_win_line
 from .game import Game, GameResult, MoveRecord
 from .encoding import encode_board, encode_board_black_perspective
 from .state import State
+from .record import save_game, load_game, game_to_dict, moves_to_text
 
 __all__ = [
     "Board", "EMPTY", "BLACK", "WHITE", "other", "Point",
@@ -13,4 +14,5 @@ __all__ = [
     "Game", "GameResult", "MoveRecord",
     "encode_board", "encode_board_black_perspective",
     "State",
+    "save_game", "load_game", "game_to_dict", "moves_to_text",
 ]

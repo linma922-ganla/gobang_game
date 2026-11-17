@@ -176,6 +176,20 @@ class Game:
         from .state import State
         return State.from_game(self)
 
+    # ------------------------------------------------------------------
+    # 棋谱保存 / 加载
+    # ------------------------------------------------------------------
+    def save(self, path) -> "Path":
+        """将当前对局保存为 JSON 棋谱文件。"""
+        from .record import save_game
+        return save_game(self, path)
+
+    @classmethod
+    def load(cls, path) -> "Game":
+        """从 JSON 棋谱文件重建对局。"""
+        from .record import load_game
+        return load_game(path)
+
     def __repr__(self) -> str:
         status = "done" if self.done else "playing"
         return (
