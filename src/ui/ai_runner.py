@@ -77,11 +77,25 @@ class AIRunner:
     def _run(self, req: AIRequest) -> None:
         try:
             action = req.agent.choose_action(req.game)
-        except Exception:
-            action = None
+        except Exception as exc:  # 不再静默吞掉，暴露真实错误便于定位
+            import traceback
+            traceback.print_exc()
+            # 兜底：返回一个合法落子，避免对局卡死
+            action = self._fallback_action(req.game)
         finally:
             req.result = action
             req.done = True
+
+    @staticmethod
+    def _fallback_action(game: Game) -> Optional[int]:
+        """AI 异常时的兜底落子：返回第一个合法空位。"""
+        try:
+            legal = game.legal_actions()
+            if legal:
+                return legal[0]
+        except Exception:
+            pass
+        return None
 
     def poll(self) -> Optional[int]:
         """若 AI 已完成且属于当前代次，返回动作；否则返回 None。"""

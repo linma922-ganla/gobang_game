@@ -177,6 +177,15 @@ class Sidebar:
         y += 22
         self._text(surface, f_small, "局面评分：" + info.get("score", "暂不可用"),
                    x + 16, y)
+        y += 22
+        self._text(surface, f_small, "VCF 必胜：" + info.get("vcf", "—"),
+                   x + 16, y)
+        y += 22
+        self._text(surface, f_small, "搜索节点：" + info.get("nodes", "—"),
+                   x + 16, y)
+        y += 22
+        self._text(surface, f_small, "NPS：" + info.get("nps", "—"),
+                   x + 16, y)
 
         # 模式说明
         y += 30

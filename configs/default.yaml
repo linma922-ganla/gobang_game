@@ -13,11 +13,17 @@ encoding:
   channels: 3           # 输入通道数：当前方 / 对手 / 最近落子
 
 search:
-  time_limit_ms: 1000   # 搜索时间限制（毫秒）
-  max_depth: 20         # 最大搜索深度
-  use_transposition_table: true
-  use_iterative_deepening: true
-  vcf_enabled: true
+  time_limit_ms: 1000        # 每步搜索时间限制（毫秒）
+  max_depth: 8               # 最大搜索深度
+  candidate_radius: 2        # 候选动作邻居搜索半径
+  max_candidates: 12         # 每节点最多候选动作数
+  enable_vcf: true           # 是否启用 VCF 战术搜索
+  vcf_max_depth: 12          # VCF 最大搜索深度
+  vcf_time_limit_ms: 200     # VCF 时间限制（毫秒）
+  enable_transposition_table: true   # 是否启用置换表
+  transposition_table_size: 1000000  # 置换表容量
+  use_transposition_table: true       # 兼容旧配置字段
+  use_iterative_deepening: true       # 是否使用迭代加深
 
 network:
   type: cnn             # 网络类型：cnn / resnet

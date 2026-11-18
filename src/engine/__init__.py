@@ -5,6 +5,10 @@
 - tactical_search.py  战术搜索（必胜点/必防点）
 - candidate_moves.py  候选动作筛选
 - evaluation.py       传统局面评分
+- zobrist.py          Zobrist 哈希
+- transposition_table.py  置换表
+- vcf.py              VCF 连续冲四必胜搜索
+- alphabeta.py        Negamax + Alpha-Beta 搜索
 """
 
 from .patterns import (
@@ -18,6 +22,10 @@ from .tactical_search import (
 )
 from .candidate_moves import candidate_moves, center_opening
 from .evaluation import evaluate_board, DEFAULT_WEIGHTS, WIN_SCORE, LOSS_SCORE
+from .zobrist import Zobrist
+from .transposition_table import TranspositionTable, NodeType, TTEntry
+from .vcf import VCFSearcher, VCFResult
+from .alphabeta import AlphaBetaSearch, SearchConfig, SearchStats, MATE_SCORE
 
 __all__ = [
     "Pattern", "FIVE", "LIVE_FOUR", "RUSH_FOUR", "LIVE_THREE",
@@ -28,4 +36,7 @@ __all__ = [
     "find_forced_defense_moves", "evaluate_tactical",
     "candidate_moves", "center_opening",
     "evaluate_board", "DEFAULT_WEIGHTS", "WIN_SCORE", "LOSS_SCORE",
+    "Zobrist", "TranspositionTable", "NodeType", "TTEntry",
+    "VCFSearcher", "VCFResult",
+    "AlphaBetaSearch", "SearchConfig", "SearchStats", "MATE_SCORE",
 ]

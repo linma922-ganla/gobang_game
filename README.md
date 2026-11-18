@@ -105,12 +105,13 @@ python -m src
 
 **操作说明：**
 
-- **人机对战**（默认模式）：人类执黑先行，AI（战术 AI）执白；点击棋盘空位落子。
+- **人机对战**（默认模式）：人类执黑先行，AI（Alpha-Beta 搜索 AI）执白；点击棋盘空位落子。
 - **悔棋**：人机模式下撤销「AI + 人类」一整轮，恢复到人类重新决策前。
 - **交换先手**：点击后人类改执白，AI 执黑（AI 先手）。
 - **重新开始 / 新对局**：清空棋盘重新开始。
-- **已接入 Agent**：随机 Agent、战术 Agent（战术搜索 + 局面评分）。
-- **待接入**：Alpha-Beta 搜索 Agent、神经网络 Agent（Phase 3 / 4 完成后接入，界面已预留统一 Agent 接口与 AI 信息展示位）。
+- **已接入 Agent**：随机 Agent、战术 Agent、Alpha-Beta 搜索 Agent。
+- **待接入**：神经网络 Agent（Phase 4 完成后接入，界面已预留统一 Agent 接口）。
+- **AI 信息栏**：人机对战时实时显示搜索深度、推荐落子、局面评分、VCF 必胜、搜索节点数、NPS。
 
 ## 自动对局（图形化查看）
 
@@ -137,8 +138,12 @@ python main.py --games 10     # 命令行统计 10 局
 - [x] Phase 0：环境检查与项目初始化
 - [x] Phase 1：游戏环境
 - [x] Phase 2：基础战术引擎
-- [ ] Phase 3：Alpha-Beta 搜索
+- [x] Phase 3：Alpha-Beta 搜索（Negamax + 迭代加深 + Zobrist 置换表 + VCF + 时间控制）
 - [ ] Phase 4：神经网络
 - [ ] Phase 5：Self-Play
 - [x] Phase 6：完整游戏界面（最小可玩版本）
 - [ ] Phase 7：评测与优化
+
+## Phase 3 算法说明
+
+详见 [docs/phase3_alphabeta.md](docs/phase3_alphabeta.md)，包含 Negamax、Alpha-Beta 剪枝、迭代加深、Zobrist Hash、置换表、Move Ordering、VCF 和时间控制的原理说明。

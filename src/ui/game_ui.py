@@ -18,12 +18,24 @@ import time
 from typing import Optional
 
 from environment import Game, Board, BLACK, WHITE, EMPTY, other, get_win_line, action_to_row_col
-from agents import Agent, RandomAgent, TacticalAgent
+from agents import Agent, RandomAgent, TacticalAgent, AlphaBetaAgent
+from engine.alphabeta import SearchConfig
 from .ai_runner import AIRunner
 
 
 # 玩家身份标记
 HUMAN = "human"
+
+
+def _make_alphabeta_agent() -> AlphaBetaAgent:
+    """创建一个默认配置的 Alpha-Beta Agent。"""
+    cfg = SearchConfig(
+        max_depth=4,
+        time_limit_ms=400,
+        max_candidates=8,
+        enable_vcf=False,
+    )
+    return AlphaBetaAgent(cfg, name="AlphaBeta AI")
 
 
 class GameUI:
@@ -58,8 +70,8 @@ class GameUI:
             self._black = HUMAN
             self._white = HUMAN
         elif mode == "human_vs_ai":
-            # 人类执 human_color，另一方是 AI
-            ai = TacticalAgent(name="战术AI")
+            # 人类执 human_color，另一方是 AlphaBeta AI
+            ai = _make_alphabeta_agent()
             if self.human_color == BLACK:
                 self._black = HUMAN
                 self._white = ai
@@ -67,7 +79,7 @@ class GameUI:
                 self._black = ai
                 self._white = HUMAN
         elif mode == "ai_vs_ai":
-            self._black = RandomAgent(name="随机AI")
+            self._black = _make_alphabeta_agent()
             self._white = TacticalAgent(name="战术AI")
 
     # ------------------------------------------------------------------
@@ -224,6 +236,42 @@ class GameUI:
         ai_label = cur_agent.name if cur_agent else "—"
         thinking = self.ai_runner.is_busy()
 
+        # 从 AlphaBetaAgent 读取真实搜索统计（若有）
+        # 优先取当前行动方的 agent，否则取最近一次思考过的 AlphaBetaAgent
+        depth = "暂不可用"
+        suggest = "暂不可用"
+        score = "暂不可用"
+        vcf = "—"
+        nodes = "—"
+        nps = "—"
+
+        # 找到任一 AlphaBetaAgent（黑或白），展示其最近一次搜索统计
+        ab_agent = None
+        for color in (g.current_player, other(g.current_player)):
+            ag = self._player_agent(color)
+            if isinstance(ag, AlphaBetaAgent):
+                ab_agent = ag
+                break
+        # 若当前行动方不是 AB，也尝试展示另一方 AB 的最近统计
+        if ab_agent is None:
+            for color in (BLACK, WHITE):
+                ag = self._player_agent(color)
+                if isinstance(ag, AlphaBetaAgent):
+                    ab_agent = ag
+                    break
+
+        if ab_agent is not None:
+            st = ab_agent.stats()
+            if st is not None:
+                depth = str(st.depth)
+                if st.best_move is not None:
+                    r, c = st.best_move
+                    suggest = f"({r+1},{c+1})"
+                score = f"{st.best_score:.1f}"
+                vcf = "是" if st.vcf_win else "否"
+                nodes = str(st.nodes)
+                nps = f"{st.nps:.0f}"
+
         return {
             "black_label": black_label,
             "white_label": white_label,
@@ -234,9 +282,12 @@ class GameUI:
             "ai_label": ai_label,
             "thinking": thinking,
             "think_time": f"{self._ai_elapsed:.2f}s" if thinking else "—",
-            "depth": "暂不可用",       # Alpha-Beta 未接入
-            "suggest": "暂不可用",     # 无搜索信息
-            "score": "暂不可用",       # 无网络评估
+            "depth": depth,
+            "suggest": suggest,
+            "score": score,
+            "vcf": vcf,
+            "nodes": nodes,
+            "nps": nps,
             "mode_label": self._mode_label(),
         }
 

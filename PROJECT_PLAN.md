@@ -20,10 +20,12 @@
 - [x] 候选动作筛选（候选动作 + 中心开局）
 
 ### Phase 3：Alpha-Beta 搜索
-- [ ] Negamax + Alpha-Beta + 迭代加深
-- [ ] 候选动作筛选、Move Ordering
-- [ ] Zobrist Hash、置换表
-- [ ] VCF 战术搜索、搜索时间限制
+- [x] Negamax + Alpha-Beta 剪枝 + 迭代加深
+- [x] 候选动作筛选、Move Ordering
+- [x] Zobrist Hash（增量更新）、置换表（EXACT/LOWER/UPPER）
+- [x] VCF 战术搜索（严格 win/no_win/unknown 三态）、搜索时间限制
+- [x] AlphaBetaAgent 接入 Agent 接口与 Pygame 界面
+- [x] 单元测试（搜索逻辑/哈希/置换表/VCF/工程质量/对局）
 
 ### Phase 4：神经网络
 - [ ] PyTorch Value Network（3×15×15 输入，[-1,1] 输出）
@@ -39,9 +41,10 @@
 - [x] 侧边栏（玩家信息、对局状态、AI 信息、按钮）
 - [x] 三种模式：双人对战、人机对战、AI 自动对战
 - [x] 悔棋、重新开始、交换先手
-- [x] AI 后台线程调度（不阻塞主线程），接入随机/战术 Agent
+- [x] AI 后台线程调度（不阻塞主线程），接入随机/战术/Alpha-Beta Agent
 - [x] headless 单元测试
-- [ ] 接入 Alpha-Beta / 神经网络 Agent（Phase 3 / 4 完成后）
+- [x] 接入 Alpha-Beta 搜索 Agent（Phase 3 完成），AI 信息栏展示搜索深度/评分/VCF/节点/NPS
+- [ ] 接入神经网络 Agent（Phase 4 完成后）
 
 ### Phase 7：评测和优化
 - [ ] 竞技场、版本对比、速度优化、棋力测试

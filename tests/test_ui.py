@@ -81,7 +81,7 @@ class TestGameLogic:
         gui = GameUI()
         assert gui.mode == "human_vs_ai"
         assert gui._player_label(BLACK) == "玩家"
-        assert gui._player_label(WHITE) == "战术AI"
+        assert gui._player_label(WHITE) == "AlphaBeta AI"
 
     def test_human_move_alternates(self):
         gui = GameUI()
