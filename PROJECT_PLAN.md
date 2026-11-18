@@ -27,13 +27,16 @@
 - [x] AlphaBetaAgent 接入 Agent 接口与 Pygame 界面
 - [x] 单元测试（搜索逻辑/哈希/置换表/VCF/工程质量/对局）
 
-### Phase 4：神经网络
-- [ ] PyTorch Value Network（3×15×15 输入，[-1,1] 输出）
+### Phase 4：神经网络（目标：轻量 Policy-Value 网络）
+- [ ] PyTorch 轻量 ResNet 双头网络（Policy Head 225 输出 + Value Head 单输出）
+- [ ] 统一训练数据格式（见 docs/MODEL_INTERFACE.md）
+- [ ] 批量推理接口（见 docs/MODEL_INTERFACE.md，协议已设计）
 - [ ] 生成训练数据、训练模型
 - [ ] 逐步替换传统静态局面评分
 
 ### Phase 5：Self-Play
 - [ ] 自动对弈、Replay Buffer、历史模型池、模型迭代
+- [ ] （研究项见 docs/RESEARCH_ROADMAP.md：MCTS、蒸馏、课程学习等）
 
 ### Phase 6：完整游戏界面
 - [x] Pygame 棋盘渲染（木质棋盘、网格线、星位、棋子立体效果）
@@ -48,6 +51,29 @@
 
 ### Phase 7：评测和优化
 - [ ] 竞技场、版本对比、速度优化、棋力测试
+
+## 架构重整（本轮完成）
+
+### 已完成
+- [x] 冻结项目基线（git 提交 6e79f73，20 文件 +1644 行）
+- [x] 搜索性能诊断统计埋点（nodes/NPS/depth/candidate/VCF/TT命中率/叶节点估值/递归深度）
+- [x] 有限时间搜索（0.5/1/3/5 秒预算，迭代加深 + 超时安全恢复）
+- [x] VCF 独立节点预算（max_nodes，防无限递归）
+- [x] 平局判断改计数器（O(1)）
+- [x] 基准测试工具（benchmarks/benchmark.py）
+- [x] 批量推理接口协议 + 训练数据格式设计（docs/MODEL_INTERFACE.md）
+
+### 文档
+- [x] docs/PROJECT_VISION.md（目标分层：长期/研究/立即做）
+- [x] docs/RESEARCH_ROADMAP.md（7 个研究项）
+- [x] docs/ARCHITECTURE_DECISIONS.md（架构决策 + 诊断结论）
+- [x] docs/MODEL_INTERFACE.md（接口协议 + 训练数据格式）
+
+### 诊断结论（重要）
+- 叶节点估值（evaluate_board 全盘棋形扫描）占总耗时 25–44%，是最大瓶颈
+- TT 命中率偏低（3.4%–6.5%），置换表加速作用未充分发挥
+- NPS 稳定在 2500–4400（Python 纯实现上限）
+- VCF 节点数少，不是瓶颈
 
 ## 环境检查记录（Phase 0）
 

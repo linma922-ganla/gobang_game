@@ -115,9 +115,11 @@ def _find_five_points(board: Board, player: int) -> List[Tuple[int, int]]:
 class VCFSearcher:
     """连续冲四必胜搜索器。"""
 
-    def __init__(self, max_depth: int = 12, time_limit_ms: int = 200):
+    def __init__(self, max_depth: int = 12, time_limit_ms: int = 200,
+                 max_nodes: int = 20_000):
         self.max_depth = max_depth
         self.time_limit_ms = time_limit_ms
+        self.max_nodes = max_nodes
         self.nodes = 0
 
     def search(self, board: Board, player: int) -> VCFResult:
@@ -144,10 +146,14 @@ class VCFSearcher:
             return False  # 负值表示无时间限制
         return (time.monotonic() - self._start) * 1000 >= self.time_limit_ms
 
+    def _node_budget_exceeded(self) -> bool:
+        """节点预算耗尽（防止无限递归/全盘扫描爆炸）。"""
+        return self.max_nodes > 0 and self.nodes >= self.max_nodes
+
     def _attack(self, board: Board, player: int, depth: int) -> VCFResult:
         """进攻方 player 的回合：寻找冲四/五连点，强制推进。"""
         self.nodes += 1
-        if self._timeout():
+        if self._timeout() or self._node_budget_exceeded():
             return VCFResult.UNKNOWN
         if depth > self.max_depth:
             return VCFResult.UNKNOWN
@@ -172,7 +178,7 @@ class VCFSearcher:
         # 对每个冲四点尝试
         found_unknown = False
         for (r, c) in rush_points:
-            if self._timeout():
+            if self._timeout() or self._node_budget_exceeded():
                 return VCFResult.UNKNOWN
             board.make_move(r, c, player)
             # 落子后可能形成双冲四/活四（即必胜）——由 _has_winning_four 判断
@@ -201,7 +207,7 @@ class VCFSearcher:
         若防守方自己能立即五连/活四，则可反杀（进攻方失败）。
         """
         self.nodes += 1
-        if self._timeout():
+        if self._timeout() or self._node_budget_exceeded():
             return VCFResult.UNKNOWN
         if depth > self.max_depth:
             return VCFResult.UNKNOWN

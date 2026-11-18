@@ -31,7 +31,7 @@ MATE_SCORE = 10_000_000.0
 
 @dataclass
 class SearchStats:
-    """搜索统计信息。"""
+    """搜索统计信息（含性能诊断字段）。"""
 
     nodes: int = 0
     depth: int = 0
@@ -41,9 +41,36 @@ class SearchStats:
     nps: float = 0.0
     vcf_win: bool = False
 
+    # ---- 性能诊断字段（Task 3）----
+    candidate_count: int = 0          # 根节点候选动作数
+    vcf_calls: int = 0                # VCF 调用次数
+    vcf_nodes: int = 0                # VCF 搜索节点数
+    tt_hits: int = 0                  # 置换表命中次数
+    tt_probes: int = 0                # 置换表探测次数
+    leaf_eval_count: int = 0          # 叶节点估值次数
+    leaf_eval_time_ms: float = 0.0    # 叶节点估值总耗时
+    max_recursion_depth: int = 0      # 最大递归深度
+    timed_out: bool = False           # 是否触发时间上限
+
     @property
     def nodes_per_second(self) -> float:
         return self.nps
+
+    @property
+    def tt_hit_rate(self) -> float:
+        """置换表命中率。"""
+        return self.tt_hits / self.tt_probes if self.tt_probes > 0 else 0.0
+
+    def summary(self) -> str:
+        """返回一行可读的统计摘要。"""
+        return (
+            f"depth={self.depth} nodes={self.nodes} nps={self.nps:.0f} "
+            f"time={self.time_ms:.1f}ms cand={self.candidate_count} "
+            f"vcf={self.vcf_calls}次/{self.vcf_nodes}节点 "
+            f"tt={self.tt_hit_rate:.1%}({self.tt_hits}/{self.tt_probes}) "
+            f"leaf_eval={self.leaf_eval_count}次/{self.leaf_eval_time_ms:.1f}ms "
+            f"max_recur={self.max_recursion_depth} timeout={self.timed_out}"
+        )
 
 
 @dataclass
@@ -57,6 +84,7 @@ class SearchConfig:
     enable_vcf: bool = True
     vcf_max_depth: int = 12
     vcf_time_limit_ms: int = 200
+    vcf_max_nodes: int = 20_000   # VCF 独立节点预算，防止无限递归
     enable_transposition_table: bool = True
     transposition_table_size: int = 1_000_000
 
@@ -75,7 +103,15 @@ class AlphaBetaSearch:
         self._vcf = VCFSearcher(
             max_depth=self.config.vcf_max_depth,
             time_limit_ms=self.config.vcf_time_limit_ms,
+            max_nodes=self.config.vcf_max_nodes,
         )
+        self._vcf_win_found = False
+        self._vcf_calls = 0
+        self._vcf_nodes = 0
+        self._leaf_eval_count = 0
+        self._leaf_eval_time = 0.0
+        self._max_recursion = 0
+        self._root_candidate_count = 0
         self.last_stats = SearchStats()
 
     # ------------------------------------------------------------------
@@ -87,6 +123,13 @@ class AlphaBetaSearch:
         self._start = time.monotonic()
         self._deadline = self._start + self.config.time_limit_ms / 1000.0
         self._timed_out = False
+        self._vcf_win_found = False
+        self._vcf_calls = 0
+        self._vcf_nodes = 0
+        self._leaf_eval_count = 0
+        self._leaf_eval_time = 0.0
+        self._max_recursion = 0
+        self._root_candidate_count = 0
 
         # 空棋盘：中心开局
         if not any(board.get(r, c) != EMPTY for r in range(board.size) for c in range(board.size)):
@@ -131,6 +174,15 @@ class AlphaBetaSearch:
             best_score=best_score,
             nps=self._nodes / (elapsed / 1000.0) if elapsed > 0 else 0.0,
             vcf_win=self._vcf_win_found,
+            candidate_count=self._root_candidate_count,
+            vcf_calls=self._vcf_calls,
+            vcf_nodes=self._vcf_nodes,
+            tt_hits=self.tt.hits,
+            tt_probes=self.tt.probes,
+            leaf_eval_count=self._leaf_eval_count,
+            leaf_eval_time_ms=self._leaf_eval_time,
+            max_recursion_depth=self._max_recursion,
+            timed_out=self._timed_out,
         )
         return self.last_stats
 
@@ -143,7 +195,9 @@ class AlphaBetaSearch:
 
         # VCF 检查：若可证明强制获胜，直接走 VCF 路线
         if self.config.enable_vcf and depth >= 3:
+            self._vcf_calls += 1
             vcf_result = self._vcf.search(board, player)
+            self._vcf_nodes += self._vcf.nodes
             if vcf_result == VCFResult.PROVEN_WIN:
                 self._vcf_win_found = True
                 # 用 VCF 的冲四点作为优先候选（由普通搜索进一步确认最优）
@@ -153,6 +207,7 @@ class AlphaBetaSearch:
         # 避免调用昂贵的 find_winning_moves / find_forced_defense_moves
         # （活四/双冲四等必胜点由 Alpha-Beta 搜索本身覆盖）。
         moves = self._candidate_moves_light(board, player)
+        self._root_candidate_count = len(moves)
 
         # Move Ordering：对候选按启发式排序
         ordered = self._order_moves(board, player, moves)
@@ -189,12 +244,15 @@ class AlphaBetaSearch:
     # Negamax + Alpha-Beta
     # ------------------------------------------------------------------
     def _negamax(self, board: Board, player: int, depth: int,
-                 alpha: float, beta: float) -> float:
+                 alpha: float, beta: float, ply: int = 0) -> float:
         """标准 Negamax + Alpha-Beta。
 
         返回当前行动方 player 视角下的局面评分。
+        ply 用于统计最大递归深度（从根节点 0 开始）。
         """
         self._nodes += 1
+        if ply > self._max_recursion:
+            self._max_recursion = ply
 
         # 时间检查（每 N 节点检查一次，减少开销）
         if self._nodes % 512 == 0 and self._time_left() <= 0:
@@ -226,7 +284,12 @@ class AlphaBetaSearch:
                 return -MATE_SCORE + (self._nodes)  # 越慢失败分数越高
 
         if depth <= 0:
-            return evaluate_board(board, player)
+            # 叶节点估值：计时统计
+            self._leaf_eval_count += 1
+            t0 = time.monotonic()
+            score = evaluate_board(board, player)
+            self._leaf_eval_time += (time.monotonic() - t0) * 1000.0
+            return score
 
         # 候选动作
         moves = self._candidate_moves_light(board, player)
@@ -240,7 +303,7 @@ class AlphaBetaSearch:
         best_move = None
         for (r, c) in ordered:
             board.make_move(r, c, player)
-            score = -self._negamax(board, other(player), depth - 1, -beta, -alpha)
+            score = -self._negamax(board, other(player), depth - 1, -beta, -alpha, ply + 1)
             board.undo_move(r, c)
             if self._timed_out:
                 return 0.0

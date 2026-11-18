@@ -106,7 +106,8 @@ class Game:
         if winner != EMPTY:
             self.winner = winner
             self.done = True
-        elif self.board.is_full():
+        elif self.move_count >= self.size * self.size:
+            # 平局：用落子计数判断（O(1)），避免每次全盘扫描 is_full()
             self.winner = EMPTY
             self.done = True
         else:
